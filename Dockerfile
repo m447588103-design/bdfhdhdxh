@@ -1,24 +1,35 @@
 # White Wolf Global Music Bot — Docker image
-# Used by Render (and works on any Docker host too).
-# Native Render builds can't run `apt-get` (read-only system dirs),
-# so we install ffmpeg + libopus here as root inside the image.
+# ffmpeg + libopus0 for Discord voice; Node.js + bgutil PO-token provider so
+# YouTube doesn't block Render's datacenter IP.
 
 FROM python:3.11-slim
 
-# ffmpeg  -> audio decode + FFmpeg effects (bass boost, nightcore, etc.)
-# libopus0 -> required by discord.py to ENCODE voice to Opus (FFmpegPCMAudio)
+# System deps:
+#   ffmpeg / libopus0  -> Discord voice playback
+#   git / curl / gnupg -> install Node.js and clone the PO token provider
+#   build-essential    -> fallback if a native module must be compiled
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg libopus0 \
+    && apt-get install -y --no-install-recommends \
+        ffmpeg libopus0 curl ca-certificates gnupg git build-essential \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
+
+# Build the bgutil PO Token provider (generates YouTube Proof-of-Origin tokens,
+# required for datacenter IPs to fetch audio formats). Output: server/build/
+RUN git clone --depth 1 --branch 1.3.2 https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git /opt/bgutil-pot \
+    && cd /opt/bgutil-pot/server \
+    && npm ci --no-audit --no-fund \
+    && npx tsc
 
 WORKDIR /app
 
-# Install Python deps first for better layer caching
+# Install Python deps (includes yt-dlp[default] + the bgutil plugin)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the bot
 COPY . .
 
-# Render injects PORT; bot.py starts the /healthz server when PORT is set
-CMD ["python", "bot.py"]
+# start.sh launches the PO token provider in the background, then the bot
+CMD ["bash", "start.sh"]
