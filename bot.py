@@ -35,7 +35,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(
 log = logging.getLogger("XenonMusic")
 
 YTDLP_OPTS = {
-    "format": "bestaudio[acodec!=none]/bestaudio/best",
+       "format": "bestaudio/best",
     "noplaylist": True,
     "quiet": True,
     "no_warnings": True,
