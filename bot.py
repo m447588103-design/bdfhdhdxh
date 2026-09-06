@@ -730,6 +730,40 @@ async def on_app_error(i,error):
         else:await i.response.send_message("❌ Something went wrong. Check terminal.",ephemeral=True)
     except Exception:pass
 
+def _start_health_server():
+    """Minimal HTTP health endpoint for hosting platforms (e.g. Render).
+
+    A free Render *web service* spins down after 15 minutes without inbound
+    HTTP traffic, which would kill the bot. This tiny server lets Render (or an
+    uptime pinger) hit ``/healthz`` so the service stays awake. It only runs
+    when a ``PORT`` env var is set (Render injects it automatically).
+    """
+    import threading
+    from aiohttp import web
+
+    async def health(_request):
+        return web.json_response({"status": "ok", "service": "white-wolf-music"})
+
+    app = web.Application()
+    app.router.add_get("/", health)
+    app.router.add_get("/healthz", health)
+
+    port = int(os.getenv("PORT", "10000"))
+
+    def _run():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        runner = web.AppRunner(app)
+        loop.run_until_complete(runner.setup())
+        loop.run_until_complete(web.TCPSite(runner, "0.0.0.0", port).start())
+        log.info("Health server listening on 0.0.0.0:%s", port)
+        loop.run_forever()
+
+    threading.Thread(target=_run, name="health-server", daemon=True).start()
+
+
 if __name__=="__main__":
     if not TOKEN:raise SystemExit("DISCORD_TOKEN is missing in .env")
+    if os.getenv("PORT"):
+        _start_health_server()
     log.info("Using FFmpeg executable: %s",FFMPEG);bot.run(TOKEN)
