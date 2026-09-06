@@ -27,6 +27,7 @@ COOKIES = os.getenv("YTDLP_COOKIES", "").strip()
 CUSTOM_FFMPEG = os.getenv("FFMPEG_PATH", "").strip()
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID", "").strip()
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET", "").strip()
+YOUTUBE_PLAYER_CLIENT = os.getenv("YOUTUBE_PLAYER_CLIENT", "").strip()
 FFMPEG = CUSTOM_FFMPEG or imageio_ffmpeg.get_ffmpeg_exe()
 
 os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
@@ -67,6 +68,12 @@ if COOKIES:
     else:
         log.warning("YTDLP_COOKIES points to a missing file: %s", COOKIES)
     YTDLP_OPTS["cookiefile"] = COOKIES
+
+# YouTube blocks datacenter IPs, and its "tv_downgraded" client (the default
+# when cookies are present) currently fails with "The page needs to be reloaded".
+# Explicitly try these clients in order; override via YOUTUBE_PLAYER_CLIENT env.
+YTDLP_PLAYER_CLIENTS = [c.strip() for c in (YOUTUBE_PLAYER_CLIENT or "tv,ios,android_vr").split(",") if c.strip()]
+YTDLP_OPTS["extractor_args"] = {"youtube": {"player_client": YTDLP_PLAYER_CLIENTS}}
 
 @dataclass
 class Track:
