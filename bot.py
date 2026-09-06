@@ -50,6 +50,22 @@ YTDLP_OPTS = {
     "concurrent_fragment_downloads": 1,
 }
 if COOKIES:
+    # yt-dlp opens the cookie file in read+write mode (to persist refreshed
+    # cookies), but Render secret files are mounted read-only. Copy the file
+    # to a writable location first so yt-dlp can use it.
+    if os.path.isfile(COOKIES):
+        try:
+            import shutil
+            import tempfile
+            _writable = os.path.join(tempfile.gettempdir(), "ytdlp_cookies.txt")
+            shutil.copyfile(COOKIES, _writable)
+            os.chmod(_writable, 0o600)
+            COOKIES = _writable
+            log.info("Copied cookies file to writable path: %s", _writable)
+        except OSError:
+            log.exception("Could not copy cookies file; YouTube may still block")
+    else:
+        log.warning("YTDLP_COOKIES points to a missing file: %s", COOKIES)
     YTDLP_OPTS["cookiefile"] = COOKIES
 
 @dataclass
