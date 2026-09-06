@@ -1,0 +1,10 @@
+# Keep the image small — don't copy git/secrets/caches into the Docker build
+.git
+.gitignore
+.env
+.env.example
+__pycache__
+*.pyc
+.venv
+venv
+data/xenon_music.db

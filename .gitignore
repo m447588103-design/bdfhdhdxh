@@ -1,0 +1,13 @@
+# Secrets
+.env
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Local runtime data (regenerated on the host)
+data/xenon_music.db
+data/animated_panels/
