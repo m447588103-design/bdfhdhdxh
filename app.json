@@ -1,0 +1,12 @@
+{
+  "name": "Aurora Music Bot",
+  "description": "Full-featured Discord music bot (YouTube + Spotify, filters, queue, lyrics).",
+  "keywords": ["discord", "music", "bot"],
+  "env": {
+    "DISCORD_TOKEN": { "description": "Discord bot token", "required": true },
+    "SPOTIFY_CLIENT_ID": { "description": "Optional Spotify app id", "required": false },
+    "SPOTIFY_CLIENT_SECRET": { "description": "Optional Spotify secret", "required": false },
+    "SELF_URL": { "description": "Public app URL for keepalive", "required": false }
+  },
+  "formation": { "web": { "quantity": 1, "size": "free" } }
+}

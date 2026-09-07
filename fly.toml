@@ -1,0 +1,32 @@
+# Fly.io — `fly launch --no-deploy` then `fly secrets set DISCORD_TOKEN=...` and `fly deploy`
+app = "aurora-music-bot"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  FFMPEG_PATH = "/usr/bin/ffmpeg"
+  DATABASE_PATH = "/data/music.db"
+
+[[mounts]]
+  source = "aurora_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    path = "/healthz"
+    interval = "30s"
+    timeout = "5s"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512

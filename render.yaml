@@ -1,41 +1,27 @@
-# Render Blueprint — deploys the White Wolf Global music bot via Docker.
-# Docs: https://render.com/docs/blueprint-spec
-#
-# WHY DOCKER: the bot needs ffmpeg + libopus for voice, and Render's *native*
-# builds run as non-root with a read-only system (so `apt-get` fails with
-# "Read-only file system"). Docker installs them inside the image instead.
-#
-# Discord bots have no HTTP traffic of their own, so we run as a *web service*
-# that also serves /healthz (see bot.py) to stay awake. Free tier = 750
-# instance-hours/month (~31 days of 24/7), 512 MB RAM.
-#
-# For a fully always-on bot with persistent storage, switch `plan` to paid and
-# attach a Persistent Disk for data/xenon_music.db.
-
+# Render free tier (web service, Docker). Free = 750 instance-hours/month.
+# Set SELF_URL to your render URL so the built-in keepalive stops it sleeping.
 services:
   - type: web
-    name: white-wolf-music-bot
+    name: aurora-music-bot
     runtime: docker
     plan: free
     autoDeploy: true
     dockerfilePath: ./Dockerfile
     healthCheckPath: /healthz
     envVars:
-      # --- Fill these in the Render dashboard (keep them out of git) ---
       - key: DISCORD_TOKEN
         sync: false
       - key: SPOTIFY_CLIENT_ID
         sync: false
       - key: SPOTIFY_CLIENT_SECRET
         sync: false
-      - key: YTDLP_COOKIES
+      - key: SELF_URL
         sync: false
-      # --- Optional defaults (already handled in bot.py) ---
       - key: DEFAULT_VOLUME
         value: "0.70"
       - key: MAX_QUEUE
-        value: "100"
+        value: "200"
       - key: DATABASE_PATH
-        value: "data/xenon_music.db"
+        value: "data/music.db"
       - key: FFMPEG_PATH
         value: "/usr/bin/ffmpeg"

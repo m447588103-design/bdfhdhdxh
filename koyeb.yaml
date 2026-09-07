@@ -1,0 +1,24 @@
+# Koyeb free instance (always-on, no sleep). Deploy from GitHub with Dockerfile.
+# Docs: https://www.koyeb.com/docs
+name: aurora-music-bot
+services:
+  - name: bot
+    type: web
+    git:
+      repository: github.com/USERNAME/REPO
+      branch: main
+      builder: dockerfile
+    instance_type: free
+    regions: [was]
+    ports:
+      - port: 8080
+        protocol: http
+    health_checks:
+      - http:
+          port: 8080
+          path: /healthz
+    env:
+      - key: DISCORD_TOKEN
+        secret: discord-token
+      - key: FFMPEG_PATH
+        value: /usr/bin/ffmpeg
